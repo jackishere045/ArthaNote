@@ -1,0 +1,795 @@
+/* ==============================
+   Account Manager - Light / Dark
+   ============================== */
+
+/* Root padding */
+.account-manager {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+/* -------------------------------
+   Header
+---------------------------------*/
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  border-radius: 16px;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.account-manager.light .account-header {
+  background: #f3f4f6; /* light gray */
+  color: #111827;       /* teks gelap */
+}
+
+.account-manager.dark .account-header {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+.header-info h2 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.total-balance {
+  margin: 0;
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.total-balance strong {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.add-account-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.account-manager.light .add-account-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.account-manager.light .add-account-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.account-manager.dark .add-account-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.account-manager.dark .add-account-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* -------------------------------
+   Loading & Error States
+---------------------------------*/
+.accounts-loading, .accounts-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.retry-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: background 0.2s;
+}
+
+.account-manager.light .retry-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.account-manager.light .retry-btn:hover {
+  background: #2563eb;
+}
+
+.account-manager.dark .retry-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.account-manager.dark .retry-btn:hover {
+  background: #1d4ed8;
+}
+
+/* -------------------------------
+   Empty State
+---------------------------------*/
+.empty-accounts {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-accounts h3 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+}
+
+.account-manager.light .empty-accounts h3 {
+  color: #374151;
+}
+
+.account-manager.dark .empty-accounts h3 {
+  color: #f1f5f9;
+}
+
+.empty-accounts p {
+  margin: 0 0 24px 0;
+  font-size: 16px;
+}
+
+.account-manager.light .empty-accounts p {
+  color: #6b7280;
+}
+
+.account-manager.dark .empty-accounts p {
+  color: #cbd5e1;
+}
+
+.add-first-account-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.account-manager.light .add-first-account-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.account-manager.light .add-first-account-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
+.account-manager.dark .add-first-account-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.account-manager.dark .add-first-account-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+/* -------------------------------
+   Accounts Grid
+---------------------------------*/
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+/* -------------------------------
+   Account Card
+---------------------------------*/
+.account-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.account-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+}
+
+.account-manager.light .account-card {
+  background: white;
+}
+
+.account-manager.dark .account-card {
+  background: #1f2937;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+}
+
+.account-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.account-manager.dark .account-card-header {
+  border-bottom-color: #334155;
+}
+
+.account-icon {
+  font-size: 28px;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.account-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-btn, .delete-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-manager.light .edit-btn {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.account-manager.light .edit-btn:hover {
+  background: #dbeafe;
+}
+
+.account-manager.dark .edit-btn {
+  background: #2563eb20;
+  color: #3b82f6;
+}
+
+.account-manager.dark .edit-btn:hover {
+  background: #2563eb40;
+}
+
+.account-manager.light .delete-btn {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.account-manager.light .delete-btn:hover {
+  background: #fee2e2;
+}
+
+.account-manager.dark .delete-btn {
+  background: #b91c1c20;
+  color: #ef4444;
+}
+
+.account-manager.dark .delete-btn:hover {
+  background: #b91c1c40;
+}
+
+.account-info {
+  padding: 16px 20px 20px;
+}
+
+.account-name {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.account-manager.light .account-name {
+  color: #000000 !important;
+}
+
+.account-manager.dark .account-name {
+  color: #f1f5f9;
+}
+
+.account-type {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.account-manager.light .account-type {
+  color: #6b7280;
+}
+
+.account-manager.dark .account-type {
+  color: #cbd5e1;
+}
+
+.account-number {
+  margin: 0 0 16px 0;
+  font-family: monospace;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.account-manager.light .account-number {
+  color: #4b5563;
+  background: #f9fafb;
+}
+
+.account-manager.dark .account-number {
+  color: #f1f5f9;
+  background: #111827;
+  border: 1px solid #334155;
+}
+
+.account-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.balance-label {
+  font-size: 14px;
+}
+
+.account-manager.light .balance-label {
+  color: #6b7280;
+}
+
+.account-manager.dark .balance-label {
+  color: #cbd5e1;
+}
+
+.balance-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #059669;
+}
+
+.account-manager.dark .balance-amount {
+  color: #22c55e;
+}
+
+.account-description {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.account-manager.light .account-description {
+  color: #6b7280;
+}
+
+.account-manager.dark .account-description {
+  color: #cbd5e1;
+}
+
+.account-card-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.account-manager.dark .account-card-footer {
+  background: #111827;
+  border-top-color: #334155;
+}
+
+.last-updated {
+  font-size: 12px;
+}
+
+.account-manager.light .last-updated {
+  color: #9ca3af;
+}
+
+.account-manager.dark .last-updated {
+  color: #94a3b8;
+}
+
+/* -------------------------------
+   Account Types Colors
+---------------------------------*/
+.account-card.cash .account-icon {
+  background: #f0fdf4;
+  color: #059669;
+}
+
+.account-card.bank .account-icon {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.account-card.eWallet .account-icon {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.account-card.credit .account-icon {
+  background: #fdf2f8;
+  color: #ec4899;
+}
+
+.account-manager.dark .account-card.cash .account-icon {
+  background: #064e3b;
+  color: #22c55e;
+}
+
+.account-manager.dark .account-card.bank .account-icon {
+  background: #1e40af;
+  color: #3b82f6;
+}
+
+.account-manager.dark .account-card.eWallet .account-icon {
+  background: #78350f;
+  color: #f59e0b;
+}
+
+.account-manager.dark .account-card.credit .account-icon {
+  background: #831843;
+  color: #f472b6;
+}
+
+/* -------------------------------
+   Modal
+---------------------------------*/
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
+}
+
+.account-manager.dark .modal-content {
+  background: #1f2937;
+  color: #f1f5f9;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.account-manager.dark .modal-header {
+  border-bottom-color: #334155;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.account-manager.light .close-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.account-manager.light .close-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.account-manager.dark .close-btn {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.account-manager.dark .close-btn:hover {
+  background: #475569;
+  color: #f1f5f9;
+}
+
+/* -------------------------------
+   Form
+---------------------------------*/
+.account-form {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.account-manager.light .form-group label {
+  color: #374151;
+}
+
+.account-manager.dark .form-group label {
+  color: #cbd5e1;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  background: white;
+  color: #111827;
+}
+
+.account-manager.dark .form-group input,
+.account-manager.dark .form-group select,
+.account-manager.dark .form-group textarea {
+  background: #111827;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.account-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.type-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.account-manager.dark .type-option {
+  background: #1f2937;
+  border-color: #334155;
+}
+
+.type-option:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.type-option.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.account-manager.dark .type-option:hover {
+  background: #334155;
+}
+
+.account-manager.dark .type-option.active {
+  background: #2563eb20;
+}
+
+.type-icon {
+  font-size: 24px;
+}
+
+.type-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Color Picker */
+.color-picker {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.active {
+  border-color: #374151;
+  transform: scale(1.1);
+}
+
+.custom-color-input {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  border: 2px solid #d1d5db !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.cancel-btn, .submit-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.account-manager.dark .cancel-btn {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+}
+
+.account-manager.dark .cancel-btn:hover {
+  background: #475569;
+  color: #f1f5f9;
+}
+
+.submit-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.submit-btn:hover {
+  background: #2563eb;
+}
+
+.submit-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Error Message */
+.error-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.account-manager.light .error-message {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.account-manager.dark .error-message {
+  background: #7f1d1d;
+  color: #fee2e2;
+}
+
+/* -------------------------------
+   Responsive
+---------------------------------*/
+@media (max-width: 768px) {
+  .account-manager {
+    padding: 16px;
+  }
+
+  .account-header {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .header-info h2 {
+    font-size: 24px;
+  }
+
+  .accounts-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .account-type-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    margin: 0;
+    border-radius: 0;
+    height: 100vh;
+    max-height: none;
+  }
+}
