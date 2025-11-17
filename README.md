@@ -1,7 +1,7 @@
 # 📒 ArthaNote
 
 ArthaNote adalah aplikasi pencatatan keuangan pribadi berbasis web.  
-Dibangun menggunakan **React + TailwindCSS** dengan **Firebase** sebagai backend untuk autentikasi, database, dan hosting.
+Dibangun menggunakan **React + TailwindCSS** dengan **Firebase** sebagai db dan backend untuk autentikasi, database, dan hosting.
 
 ---
 
