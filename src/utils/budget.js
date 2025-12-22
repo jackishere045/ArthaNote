@@ -239,3 +239,40 @@ export const validateBudgetData = (budgetData) => {
     errors
   };
 };
+/**
+ * Calculate salary period based on payday (20th)
+ * @returns {object} - { periodStart, periodEnd }
+ */
+export const getCurrentSalaryPeriod = () => {
+  const today = new Date();
+  const currentDay = today.getDate();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  let periodStart, periodEnd;
+  
+  if (currentDay >= 20) {
+    // Setelah tanggal 20 → periode ini dimulai tanggal 20 bulan ini
+    periodStart = new Date(currentYear, currentMonth, 20, 0, 0, 0, 0);
+    periodEnd = new Date(currentYear, currentMonth + 1, 19, 23, 59, 59, 999);
+  } else {
+    // Sebelum tanggal 20 → masih periode bulan lalu
+    periodStart = new Date(currentYear, currentMonth - 1, 20, 0, 0, 0, 0);
+    periodEnd = new Date(currentYear, currentMonth, 19, 23, 59, 59, 999);
+  }
+  
+  return { periodStart, periodEnd };
+};
+
+/**
+ * Check if budget is in current period
+ */
+export const isInCurrentPeriod = (budget) => {
+  if (!budget.periodStart || !budget.periodEnd) return false;
+  
+  const now = new Date();
+  const start = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
+  const end = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
+  
+  return now >= start && now <= end;
+};

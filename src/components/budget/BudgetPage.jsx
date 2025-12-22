@@ -67,11 +67,12 @@ const BudgetPage = () => {
     return periodMap[period] || period;
   };
 
-  // Calculate spent amount for a specific category and period
-  const calculateSpentAmount = (category, period) => {
-    const now = new Date();
+  const calculateSpentAmount = (category, budget) => {
+    if (!budget.periodStart || !budget.periodEnd) return 0;
     
-    // Filter transactions based on period
+    const periodStart = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
+    const periodEnd = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
+    
     const filteredTransactions = transactions.filter(transaction => {
       if (transaction.type !== 'expense' || transaction.category !== category) {
         return false;
@@ -79,31 +80,8 @@ const BudgetPage = () => {
 
       const transactionDate = transaction.date?.toDate ? transaction.date.toDate() : new Date(transaction.date);
       
-      switch (period) {
-        case 'daily':
-          return (
-            transactionDate.getDate() === now.getDate() &&
-            transactionDate.getMonth() === now.getMonth() &&
-            transactionDate.getFullYear() === now.getFullYear()
-          );
-        
-        case 'weekly':
-          const oneWeekAgo = new Date();
-          oneWeekAgo.setDate(now.getDate() - 7);
-          return transactionDate >= oneWeekAgo && transactionDate <= now;
-        
-        case 'monthly':
-          return (
-            transactionDate.getMonth() === now.getMonth() &&
-            transactionDate.getFullYear() === now.getFullYear()
-          );
-        
-        case 'yearly':
-          return transactionDate.getFullYear() === now.getFullYear();
-        
-        default:
-          return false;
-      }
+      // Cek apakah transaksi dalam range periode budget
+      return transactionDate >= periodStart && transactionDate <= periodEnd;
     });
 
     return filteredTransactions.reduce((total, transaction) => total + transaction.amount, 0);
@@ -552,7 +530,7 @@ const BudgetPage = () => {
             <BudgetCard
               key={budget.id}
               budget={budget}
-              spent={calculateSpentAmount(budget.category, budget.period)}
+              spent={calculateSpentAmount(budget.category, budget)} // tambah budget param
               userCategories={userCategories}
               onEdit={handleEdit}
               onDelete={handleDelete}
