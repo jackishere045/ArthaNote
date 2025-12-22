@@ -1,4 +1,19 @@
+import { db, auth } from "./config";
 import { Timestamp } from "firebase/firestore";
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  deleteDoc,
+  getDoc,
+  query, 
+  orderBy, 
+  where,
+  serverTimestamp,
+  Timestamp  // ← INI JUGA
+} from "firebase/firestore";
 
 // Helper: Get current period
 const getCurrentPeriod = () => {
