@@ -11,46 +11,22 @@ import {
   orderBy, 
   where,
   serverTimestamp,
-  Timestamp  // ← INI JUGA
+  Timestamp
 } from "firebase/firestore";
 
-// Helper: Get current period
-const getCurrentPeriod = () => {
-  const today = new Date();
-  const currentDay = today.getDate();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  
-  let periodStart, periodEnd;
-  
-  if (currentDay >= 20) {
-    periodStart = new Date(currentYear, currentMonth, 20, 0, 0, 0, 0);
-    periodEnd = new Date(currentYear, currentMonth + 1, 19, 23, 59, 59, 999);
-  } else {
-    periodStart = new Date(currentYear, currentMonth - 1, 20, 0, 0, 0, 0);
-    periodEnd = new Date(currentYear, currentMonth, 19, 23, 59, 59, 999);
-  }
-  
-  return {
-    periodStart: Timestamp.fromDate(periodStart),
-    periodEnd: Timestamp.fromDate(periodEnd)
-  };
-};
-
-// ✅ Add new budget - SELALU BUAT BARU
+// ✅ Add budget - SELALU BUAT BARU
 export const addBudget = async (budgetData) => {
   try {
     const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
     const budgetsRef = collection(db, "users", user.uid, "budgets");
-    const { periodStart, periodEnd } = getCurrentPeriod();
 
-    // TIDAK CEK DUPLIKAT LAGI - langsung buat baru
     const docRef = await addDoc(budgetsRef, {
-      ...budgetData,
-      periodStart,
-      periodEnd,
+      category: budgetData.category,
+      amount: budgetData.amount,
+      periodStart: budgetData.periodStart, // Timestamp dari form
+      periodEnd: budgetData.periodEnd,     // Timestamp dari form
       isArchived: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -63,21 +39,19 @@ export const addBudget = async (budgetData) => {
   }
 };
 
-// ✅ Get ACTIVE budgets (periode sekarang + tidak archived)
+// ✅ Get ALL active budgets (filter periode di frontend)
 export const getUserBudgets = async () => {
   try {
     const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
     const budgetsRef = collection(db, "users", user.uid, "budgets");
-    const { periodStart, periodEnd } = getCurrentPeriod();
     
-    // Query: isArchived = false DAN dalam periode aktif
+    // Query sederhana: hanya filter archived & sort
     const q = query(
       budgetsRef,
       where("isArchived", "==", false),
-      where("periodStart", "==", periodStart),
-      orderBy("createdAt", "desc")
+      orderBy("periodStart", "desc")
     );
     
     const querySnapshot = await getDocs(q);
@@ -97,7 +71,7 @@ export const getUserBudgets = async () => {
   }
 };
 
-// ✅ Update budget - masih boleh update di periode yang sama
+// ✅ Update budget
 export const updateBudget = async (budgetId, updatedData) => {
   try {
     const user = auth.currentUser;
@@ -110,9 +84,11 @@ export const updateBudget = async (budgetId, updatedData) => {
       throw new Error("Budget not found");
     }
 
-    // TIDAK CEK DUPLIKAT - user bebas edit
     await updateDoc(budgetRef, {
-      ...updatedData,
+      category: updatedData.category,
+      amount: updatedData.amount,
+      periodStart: updatedData.periodStart,
+      periodEnd: updatedData.periodEnd,
       updatedAt: serverTimestamp()
     });
 
@@ -123,7 +99,7 @@ export const updateBudget = async (budgetId, updatedData) => {
   }
 };
 
-// ✅ Delete budget → ARCHIVE, bukan hard delete
+// ✅ Delete budget → SOFT DELETE
 export const deleteBudget = async (budgetId) => {
   try {
     const user = auth.currentUser;
@@ -136,7 +112,6 @@ export const deleteBudget = async (budgetId) => {
       throw new Error("Budget not found");
     }
 
-    // SOFT DELETE - set isArchived = true
     await updateDoc(budgetRef, {
       isArchived: true,
       updatedAt: serverTimestamp()
@@ -145,34 +120,6 @@ export const deleteBudget = async (budgetId) => {
     return budgetId;
   } catch (error) {
     console.error("Error deleting budget:", error);
-    throw error;
-  }
-};
-
-// ✅ Get budget by category - periode aktif saja
-export const getBudgetByCategory = async (category, period) => {
-  try {
-    const user = auth.currentUser;
-    if (!user) throw new Error("User not authenticated");
-
-    const budgetsRef = collection(db, "users", user.uid, "budgets");
-    const { periodStart } = getCurrentPeriod();
-    
-    const q = query(
-      budgetsRef,
-      where("category", "==", category),
-      where("isArchived", "==", false),
-      where("periodStart", "==", periodStart)
-    );
-    
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) return null;
-
-    const doc = querySnapshot.docs[0];
-    return { id: doc.id, ...doc.data() };
-  } catch (error) {
-    console.error("Error fetching budget by category:", error);
     throw error;
   }
 };

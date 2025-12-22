@@ -35,11 +35,19 @@ const BudgetPage = () => {
 
       const [budgetsData, transactionsData, categoriesData] = await Promise.all([
         getUserBudgets(),
-        getUserTransactions(1000), // Get more transactions for accurate calculation
+        getUserTransactions(1000),
         getUserCategories()
       ]);
 
-      setBudgets(budgetsData);
+      // Filter budget yang aktif (periodEnd >= today)
+      const today = new Date();
+      const activeBudgets = budgetsData.filter(budget => {
+        if (!budget.periodEnd) return false;
+        const end = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
+        return end >= today;
+      });
+
+      setBudgets(activeBudgets);
       setTransactions(transactionsData);
       setUserCategories(categoriesData);
     } catch (error) {
@@ -57,14 +65,17 @@ const BudgetPage = () => {
       minimumFractionDigits: 0,
     }).format(amount);
 
-  const getPeriodLabel = (period) => {
-    const periodMap = {
-      'daily': t('daily') || 'Harian',
-      'weekly': t('weekly') || 'Mingguan',
-      'monthly': t('monthly') || 'Bulanan',
-      'yearly': t('yearly') || 'Tahunan'
+  const getPeriodLabel = (budget) => {
+    if (!budget.periodStart || !budget.periodEnd) return '-';
+    
+    const start = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
+    const end = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
+    
+    const formatDate = (date) => {
+      return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     };
-    return periodMap[period] || period;
+    
+    return `${formatDate(start)} - ${formatDate(end)}`;
   };
 
   const calculateSpentAmount = (category, budget) => {
@@ -80,7 +91,6 @@ const BudgetPage = () => {
 
       const transactionDate = transaction.date?.toDate ? transaction.date.toDate() : new Date(transaction.date);
       
-      // Cek apakah transaksi dalam range periode budget
       return transactionDate >= periodStart && transactionDate <= periodEnd;
     });
 
@@ -208,7 +218,7 @@ const BudgetPage = () => {
             <span className={`text-sm ${
               isDark ? 'text-gray-400' : 'text-gray-500'
             }`}>
-              {getPeriodLabel(budget.period)}
+              {getPeriodLabel(budget)}
             </span>
           </div>
 

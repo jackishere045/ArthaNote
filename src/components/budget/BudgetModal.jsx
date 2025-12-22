@@ -1,4 +1,3 @@
-// src/components/budget/BudgetModal.jsx
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { addBudget, updateBudget } from '../../firebase/budget';
@@ -6,6 +5,7 @@ import { getUserCategories } from '../../firebase/categories';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getCategoryOptions } from '../../utils/categories';
+import { Timestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
 const BudgetModal = ({ 
@@ -20,7 +20,8 @@ const BudgetModal = ({
   const [formData, setFormData] = useState({
     category: '',
     amount: '',
-    period: 'monthly'
+    startDate: '',
+    endDate: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -28,24 +29,40 @@ const BudgetModal = ({
   const [userCategories, setUserCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // Load user categories on mount
   useEffect(() => {
     loadUserCategories();
   }, []);
 
-  // Populate form when editing
   useEffect(() => {
     if (editBudget) {
+      const start = editBudget.periodStart?.toDate ? editBudget.periodStart.toDate() : new Date(editBudget.periodStart);
+      const end = editBudget.periodEnd?.toDate ? editBudget.periodEnd.toDate() : new Date(editBudget.periodEnd);
+      
       setFormData({
         category: editBudget.category || '',
         amount: editBudget.amount?.toString() || '',
-        period: editBudget.period || 'monthly'
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0]
       });
     } else {
+      // Default: periode gajian (20 bulan ini - 19 bulan depan)
+      const today = new Date();
+      const currentDay = today.getDate();
+      let start, end;
+      
+      if (currentDay >= 20) {
+        start = new Date(today.getFullYear(), today.getMonth(), 20);
+        end = new Date(today.getFullYear(), today.getMonth() + 1, 19);
+      } else {
+        start = new Date(today.getFullYear(), today.getMonth() - 1, 20);
+        end = new Date(today.getFullYear(), today.getMonth(), 19);
+      }
+      
       setFormData({
         category: '',
         amount: '',
-        period: 'monthly'
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0]
       });
     }
     setError('');
@@ -67,14 +84,13 @@ const BudgetModal = ({
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (error) setError(''); // Clear error when user starts typing
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
-    if (!formData.category || !formData.amount || !formData.period) {
+    if (!formData.category || !formData.amount || !formData.startDate || !formData.endDate) {
       setError(t('allFieldsRequired') || 'Semua field harus diisi');
       return;
     }
@@ -85,6 +101,14 @@ const BudgetModal = ({
       return;
     }
 
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    
+    if (end <= start) {
+      setError('Tanggal selesai harus setelah tanggal mulai');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -92,15 +116,14 @@ const BudgetModal = ({
       const budgetData = {
         category: formData.category,
         amount: amount,
-        period: formData.period
+        periodStart: Timestamp.fromDate(start),
+        periodEnd: Timestamp.fromDate(end)
       };
 
       if (editBudget) {
-        // Update existing budget
         await updateBudget(editBudget.id, budgetData);
         toast.success(t('budgetUpdated') || 'Budget berhasil diperbarui');
       } else {
-        // Add new budget
         await addBudget(budgetData);
         toast.success(t('budgetAdded') || 'Budget berhasil ditambahkan');
       }
@@ -109,22 +132,11 @@ const BudgetModal = ({
       onClose();
     } catch (error) {
       console.error('Error saving budget:', error);
-      if (error.message.includes('already exists')) {
-        setError(t('budgetAlreadyExists') || 'Budget untuk kategori dan periode ini sudah ada');
-      } else {
-        setError(error.message || (t('failedToSaveBudget') || 'Gagal menyimpan budget'));
-      }
+      setError(error.message || (t('failedToSaveBudget') || 'Gagal menyimpan budget'));
     } finally {
       setLoading(false);
     }
   };
-
-  const periodOptions = [
-    { value: 'daily', label: t('daily') || 'Harian' },
-    { value: 'weekly', label: t('weekly') || 'Mingguan' },
-    { value: 'monthly', label: t('monthly') || 'Bulanan' },
-    { value: 'yearly', label: t('yearly') || 'Tahunan' }
-  ];
 
   if (!isOpen) return null;
 
@@ -134,7 +146,6 @@ const BudgetModal = ({
         isDark ? 'bg-gray-800' : 'bg-white'
       }`}>
         
-        {/* Header */}
         <div className={`flex items-center justify-between p-6 border-b ${
           isDark ? 'border-gray-700' : 'border-gray-200'
         }`}>
@@ -159,7 +170,6 @@ const BudgetModal = ({
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-100 border border-red-200 text-red-700 text-sm">
@@ -167,7 +177,7 @@ const BudgetModal = ({
             </div>
           )}
 
-          {/* Category Selection */}
+          {/* Category */}
           <div>
             <label className={`block text-sm font-medium mb-2 ${
               isDark ? 'text-gray-300' : 'text-gray-700'
@@ -205,7 +215,7 @@ const BudgetModal = ({
             )}
           </div>
 
-          {/* Budget Amount */}
+          {/* Amount */}
           <div>
             <label className={`block text-sm font-medium mb-2 ${
               isDark ? 'text-gray-300' : 'text-gray-700'
@@ -229,33 +239,50 @@ const BudgetModal = ({
             />
           </div>
 
-          {/* Period Selection */}
-          <div>
-            <label className={`block text-sm font-medium mb-2 ${
-              isDark ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              {t('budgetPeriod') || 'Periode Budget'} *
-            </label>
-            <select
-              name="period"
-              value={formData.period}
-              onChange={handleInputChange}
-              required
-              className={`w-full p-3 rounded-lg border transition-colors duration-200 ${
-                isDark 
-                  ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
-                  : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
-              } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
-            >
-              {periodOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          {/* Date Range */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Tanggal Mulai *
+              </label>
+              <input
+                type="date"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleInputChange}
+                required
+                className={`w-full p-3 rounded-lg border transition-colors duration-200 ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+              />
+            </div>
+
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                isDark ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Tanggal Selesai *
+              </label>
+              <input
+                type="date"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleInputChange}
+                required
+                className={`w-full p-3 rounded-lg border transition-colors duration-200 ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white focus:border-blue-500' 
+                    : 'bg-white border-gray-300 text-gray-900 focus:border-blue-500'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500/20`}
+              />
+            </div>
           </div>
 
-          {/* Form Actions */}
+          {/* Actions */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"

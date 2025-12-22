@@ -7,49 +7,6 @@
  * @param {string} period - Time period (daily, weekly, monthly, yearly)
  * @returns {number} - Total spent amount
  */
-export const calculateSpentAmount = (transactions, category, period) => {
-  const now = new Date();
-  
-  // Filter transactions based on category, type, and period
-  const filteredTransactions = transactions.filter(transaction => {
-    if (transaction.type !== 'expense' || transaction.category !== category) {
-      return false;
-    }
-
-    const transactionDate = transaction.date?.toDate 
-      ? transaction.date.toDate() 
-      : new Date(transaction.date);
-    
-    switch (period) {
-      case 'daily':
-        return (
-          transactionDate.getDate() === now.getDate() &&
-          transactionDate.getMonth() === now.getMonth() &&
-          transactionDate.getFullYear() === now.getFullYear()
-        );
-      
-      case 'weekly':
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(now.getDate() - 7);
-        return transactionDate >= oneWeekAgo && transactionDate <= now;
-      
-      case 'monthly':
-        return (
-          transactionDate.getMonth() === now.getMonth() &&
-          transactionDate.getFullYear() === now.getFullYear()
-        );
-      
-      case 'yearly':
-        return transactionDate.getFullYear() === now.getFullYear();
-      
-      default:
-        return false;
-    }
-  });
-
-  return filteredTransactions.reduce((total, transaction) => total + transaction.amount, 0);
-};
-
 /**
  * Calculate budget progress percentage
  * @param {number} spent - Amount spent
@@ -148,15 +105,6 @@ export const calculateBudgetSummary = (budgets, transactions) => {
  * @param {function} t - Translation function
  * @returns {string} - Localized period label
  */
-export const getPeriodLabel = (period, t) => {
-  const periodMap = {
-    'daily': t('daily') || 'Harian',
-    'weekly': t('weekly') || 'Mingguan',
-    'monthly': t('monthly') || 'Bulanan',
-    'yearly': t('yearly') || 'Tahunan'
-  };
-  return periodMap[period] || period;
-};
 
 /**
  * Format currency for display
@@ -243,36 +191,7 @@ export const validateBudgetData = (budgetData) => {
  * Calculate salary period based on payday (20th)
  * @returns {object} - { periodStart, periodEnd }
  */
-export const getCurrentSalaryPeriod = () => {
-  const today = new Date();
-  const currentDay = today.getDate();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  
-  let periodStart, periodEnd;
-  
-  if (currentDay >= 20) {
-    // Setelah tanggal 20 → periode ini dimulai tanggal 20 bulan ini
-    periodStart = new Date(currentYear, currentMonth, 20, 0, 0, 0, 0);
-    periodEnd = new Date(currentYear, currentMonth + 1, 19, 23, 59, 59, 999);
-  } else {
-    // Sebelum tanggal 20 → masih periode bulan lalu
-    periodStart = new Date(currentYear, currentMonth - 1, 20, 0, 0, 0, 0);
-    periodEnd = new Date(currentYear, currentMonth, 19, 23, 59, 59, 999);
-  }
-  
-  return { periodStart, periodEnd };
-};
 
 /**
  * Check if budget is in current period
  */
-export const isInCurrentPeriod = (budget) => {
-  if (!budget.periodStart || !budget.periodEnd) return false;
-  
-  const now = new Date();
-  const start = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
-  const end = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
-  
-  return now >= start && now <= end;
-};
