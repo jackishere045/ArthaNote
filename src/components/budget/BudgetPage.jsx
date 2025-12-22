@@ -39,15 +39,17 @@ const BudgetPage = () => {
         getUserCategories()
       ]);
 
-      // Filter budget yang aktif (periodEnd >= today)
+      // ✅ FIX: Filter budget yang VALID (punya periodStart & periodEnd)
       const today = new Date();
-      const activeBudgets = budgetsData.filter(budget => {
-        if (!budget.periodEnd) return false;
+      const validBudgets = budgetsData.filter(budget => {
+        // Skip budget yang gak punya period dates
+        if (!budget.periodStart || !budget.periodEnd) return false;
+        
         const end = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
         return end >= today;
       });
 
-      setBudgets(activeBudgets);
+      setBudgets(validBudgets);
       setTransactions(transactionsData);
       setUserCategories(categoriesData);
     } catch (error) {
@@ -57,7 +59,6 @@ const BudgetPage = () => {
       setLoading(false);
     }
   };
-
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -66,7 +67,8 @@ const BudgetPage = () => {
     }).format(amount);
 
   const getPeriodLabel = (budget) => {
-    if (!budget.periodStart || !budget.periodEnd) return '-';
+    // ✅ FIX: Return fallback kalau invalid
+    if (!budget || !budget.periodStart || !budget.periodEnd) return '-';
     
     const start = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
     const end = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
@@ -79,7 +81,8 @@ const BudgetPage = () => {
   };
 
   const calculateSpentAmount = (category, budget) => {
-    if (!budget.periodStart || !budget.periodEnd) return 0;
+    // ✅ FIX: Return 0 kalau budget invalid
+    if (!budget || !budget.periodStart || !budget.periodEnd) return 0;
     
     const periodStart = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
     const periodEnd = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
@@ -97,20 +100,26 @@ const BudgetPage = () => {
     return filteredTransactions.reduce((total, transaction) => total + transaction.amount, 0);
   };
 
-  // Calculate budget summary
   const getBudgetSummary = () => {
     const totalAllocated = budgets.reduce((sum, budget) => sum + budget.amount, 0);
+    
     const totalSpent = budgets.reduce((sum, budget) => {
-      return sum + calculateSpentAmount(budget.category, budget.period);
+      // ✅ FIX: Skip kalau budget invalid
+      if (!budget.periodStart || !budget.periodEnd) return sum;
+      return sum + calculateSpentAmount(budget.category, budget);
     }, 0);
     
     const overBudgetCount = budgets.filter(budget => {
-      const spent = calculateSpentAmount(budget.category, budget.period);
+      // ✅ FIX: Skip kalau budget invalid
+      if (!budget.periodStart || !budget.periodEnd) return false;
+      const spent = calculateSpentAmount(budget.category, budget);
       return spent > budget.amount;
     }).length;
 
     const nearLimitCount = budgets.filter(budget => {
-      const spent = calculateSpentAmount(budget.category, budget.period);
+      // ✅ FIX: Skip kalau budget invalid
+      if (!budget.periodStart || !budget.periodEnd) return false;
+      const spent = calculateSpentAmount(budget.category, budget);
       const percentage = (spent / budget.amount) * 100;
       return percentage > 80 && percentage <= 100;
     }).length;
