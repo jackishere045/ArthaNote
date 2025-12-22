@@ -81,24 +81,48 @@ const BudgetPage = () => {
   };
 
   const calculateSpentAmount = (category, budget) => {
-    // ✅ FIX: Return 0 kalau budget invalid
-    if (!budget || !budget.periodStart || !budget.periodEnd) return 0;
-    
-    const periodStart = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
-    const periodEnd = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
-    
-    const filteredTransactions = transactions.filter(transaction => {
-      if (transaction.type !== 'expense' || transaction.category !== category) {
-        return false;
-      }
+  // Return 0 kalau budget invalid
+  if (!budget || !budget.periodStart || !budget.periodEnd) return 0;
+  
+  const periodStart = budget.periodStart.toDate ? budget.periodStart.toDate() : new Date(budget.periodStart);
+  const periodEnd = budget.periodEnd.toDate ? budget.periodEnd.toDate() : new Date(budget.periodEnd);
+  
+  // Set time untuk perbandingan yang akurat
+  periodStart.setHours(0, 0, 0, 0);
+  periodEnd.setHours(23, 59, 59, 999);
+  
+  const filteredTransactions = transactions.filter(transaction => {
+    // Filter hanya expense dengan kategori yang sama
+    if (transaction.type !== 'expense' || transaction.category !== category) {
+      return false;
+    }
 
-      const transactionDate = transaction.date?.toDate ? transaction.date.toDate() : new Date(transaction.date);
-      
-      return transactionDate >= periodStart && transactionDate <= periodEnd;
-    });
+    // Parse transaction date
+    let transactionDate;
+    if (transaction.date?.toDate) {
+      transactionDate = transaction.date.toDate();
+    } else if (transaction.date) {
+      transactionDate = new Date(transaction.date);
+    } else {
+      return false; // Skip jika tidak ada tanggal
+    }
+    
+    // Check apakah transaksi dalam periode budget
+    return transactionDate >= periodStart && transactionDate <= periodEnd;
+  });
 
-    return filteredTransactions.reduce((total, transaction) => total + transaction.amount, 0);
-  };
+  const total = filteredTransactions.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+  
+  // Debug log untuk cek (hapus setelah testing)
+  console.log(`Budget ${category}:`, {
+    periodStart: periodStart.toISOString(),
+    periodEnd: periodEnd.toISOString(),
+    transactionsFound: filteredTransactions.length,
+    totalSpent: total
+  });
+  
+  return total;
+};
 
   const getBudgetSummary = () => {
     const totalAllocated = budgets.reduce((sum, budget) => sum + budget.amount, 0);
