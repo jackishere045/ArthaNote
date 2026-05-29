@@ -32,7 +32,7 @@ const AIAssistant = () => {
   return (
     <>
       {/* ── Floating Button ──────────────────────────────────────────────────── */}
-      <button
+      {/* <button
         className="ai-fab"
         onClick={() => setIsOpen((v) => !v)}
         aria-label="Buka AI Assistant"
@@ -45,7 +45,7 @@ const AIAssistant = () => {
         {!isOpen && badgeCount > 0 && (
           <span className="ai-fab-badge">{badgeCount}</span>
         )}
-      </button>
+      </button> */}
 
       {/* ── Backdrop (mobile only) ───────────────────────────────────────────── */}
       {isOpen && (

@@ -16,29 +16,20 @@ import {
   buildReminderPrompt,
 } from "../utils/aiPrompts";
 
-const REPLICATE_TOKEN = import.meta.env.VITE_REPLICATE_API_TOKEN;
 
 // Pakai proxy Vite di dev agar tidak kena CORS, langsung ke Replicate di production
 const REPLICATE_BASE =
   import.meta.env.DEV
     ? "/api/replicate"
-    : "https://api.replicate.com/v1";
+    : "/.netlify/functions/replicate";
 
 // ─── Core: call Replicate ─────────────────────────────────────────────────────
 
 const callReplicate = async (prompt, systemPrompt, maxTokens = 300) => {
-  if (!REPLICATE_TOKEN) {
-    throw new Error(
-      "VITE_REPLICATE_API_TOKEN tidak ditemukan. Cek file .env kamu."
-    );
-  }
-
-  const createRes = await fetch(`${REPLICATE_BASE}/predictions`, {
+  const res = await fetch(`${REPLICATE_BASE}`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${REPLICATE_TOKEN}`,
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
+    // ← Tidak perlu Authorization header lagi, token ada di server
     body: JSON.stringify({
       version: "5a6809ca6288247d06daf6365557e5e429063f32a21146b2a807c682652136b8",
       input: {
@@ -51,13 +42,13 @@ const callReplicate = async (prompt, systemPrompt, maxTokens = 300) => {
     }),
   });
 
-  if (!createRes.ok) {
-    const err = await createRes.json().catch(() => ({}));
-    throw new Error(`Replicate error: ${err.detail || createRes.statusText}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Replicate error: ${err.error || res.statusText}`);
   }
 
-  const prediction = await createRes.json();
-  return await pollPrediction(prediction.id);
+  const data = await res.json();
+  return data.output || "";
 };
 
 const pollPrediction = async (predictionId) => {
