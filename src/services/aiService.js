@@ -16,7 +16,7 @@ import {
   buildReminderPrompt,
 } from "../utils/aiPrompts";
 
-const REPLICATE_TOKEN = import.meta.env.VITE_REPLICATE_API_TOKEN;
+const REPLICATE_TOKEN = import.meta.env.REPLICATE_API_TOKEN;
 
 // Pakai proxy Vite di dev agar tidak kena CORS, langsung ke Replicate di production
 const REPLICATE_BASE =
@@ -29,7 +29,7 @@ const REPLICATE_BASE =
 const callReplicate = async (prompt, systemPrompt, maxTokens = 300) => {
   if (!REPLICATE_TOKEN) {
     throw new Error(
-      "VITE_REPLICATE_API_TOKEN tidak ditemukan. Cek file .env kamu."
+      "REPLICATE_API_TOKEN tidak ditemukan. Cek file .env kamu."
     );
   }
 
