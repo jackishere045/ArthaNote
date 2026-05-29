@@ -1,4 +1,4 @@
-// ArthaNote.jsx - Main Layout dengan proper spacing
+// src/components/ArthaNote.jsx
 import React, { useState } from "react";
 import Sidebar from "./layout/Sidebar";
 import Header from "./layout/Header";
@@ -14,6 +14,7 @@ import Goals from "./placeholders/Goals";
 import Reports from "./placeholders/Reports";
 import AddTransaction from "./transaction/AddTransactions";
 import AddAccountModal from "./account/AddAccountModal";
+import AIAssistant from "./ai/AIAssistant"; // ← tambahan
 import { useTheme } from "../contexts/ThemeContext";
 
 const ArthaNote = () => {
@@ -42,7 +43,7 @@ const ArthaNote = () => {
       case "budget":
         return (
           <BudgetPage
-            refreshTrigger={showAddBudget} 
+            refreshTrigger={showAddBudget}
             showAdd={showAddBudget}
             setShowAdd={setShowAddBudget}
           />
@@ -67,12 +68,7 @@ const ArthaNote = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen ${
-        isDark ? "dark bg-gray-900" : "bg-gray-50"
-      }`}
-    >
-      {/* Sidebar */}
+    <div className={`min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-50"}`}>
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -80,19 +76,15 @@ const ArthaNote = () => {
         setSidebarOpen={setSidebarOpen}
       />
 
-      {/* Header */}
       <Header
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         openAddTransaction={() => setShowAddTransaction(true)}
       />
 
-      {/* Main content area dengan proper spacing */}
-      <main 
+      <main
         className="lg:ml-64 pt-16 min-h-screen"
-        style={{ 
-          paddingTop: '64px', // Height of header
-        }}
+        style={{ paddingTop: "64px" }}
       >
         <div className="p-4 lg:p-6 h-full overflow-y-auto">
           {renderContent()}
@@ -106,27 +98,27 @@ const ArthaNote = () => {
           onTransactionAdded={() => setShowAddTransaction(false)}
         />
       )}
-
       {showAddAccount && (
         <AddAccountModal
           onClose={() => setShowAddAccount(false)}
           onAccountAdded={() => setShowAddAccount(false)}
         />
       )}
-
       {showAddBudget && (
         <BudgetModal
           onClose={() => setShowAddBudget(false)}
           onBudgetAdded={() => setShowAddBudget(false)}
         />
       )}
-
       {showAddSavings && (
         <SavingsModal
           onClose={() => setShowAddSavings(false)}
           onSavingsAdded={() => setShowAddSavings(false)}
         />
       )}
+
+      {/* AI Assistant — position: fixed, tidak ganggu layout apapun */}
+      <AIAssistant />
     </div>
   );
 };
