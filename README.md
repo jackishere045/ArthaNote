@@ -36,16 +36,7 @@ bash
 Copy code
 npm install
 3. Setup environment
-Buat file .env di root project:
-
-env
-Copy code
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+Buat file .env di root project
 🔑 Ganti nilai di atas dengan konfigurasi Firebase project kamu.
 Jangan lupa .env masuk ke .gitignore.
 
